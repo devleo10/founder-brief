@@ -15,19 +15,36 @@ export type SearchOptions = {
 
 const EXA_API_KEY = process.env.EXA_API_KEY;
 const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
+const SEARCH_TIMEOUT_MS = 15_000;
+
+async function fetchWithTimeout(
+  url: string,
+  init: RequestInit,
+  timeoutMs = SEARCH_TIMEOUT_MS
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 // --- Exa.ai ---
 
 async function searchExa(opts: SearchOptions): Promise<SearchResult[]> {
   if (!EXA_API_KEY) return [];
 
-  const res = await fetch("https://api.exa.ai/search", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": EXA_API_KEY,
-    },
-    body: JSON.stringify({
+  let res: Response;
+  try {
+    res = await fetchWithTimeout("https://api.exa.ai/search", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": EXA_API_KEY,
+      },
+      body: JSON.stringify({
       query: opts.query,
       numResults: opts.numResults || 5,
       type: opts.type || "auto",
@@ -35,7 +52,10 @@ async function searchExa(opts: SearchOptions): Promise<SearchResult[]> {
       excludeDomains: opts.excludeDomains,
       contents: { text: { maxCharacters: 2000 } },
     }),
-  });
+    });
+  } catch {
+    return [];
+  }
 
   if (!res.ok) return [];
 
@@ -53,17 +73,22 @@ async function searchExa(opts: SearchOptions): Promise<SearchResult[]> {
 async function searchTavily(opts: SearchOptions): Promise<SearchResult[]> {
   if (!TAVILY_API_KEY) return [];
 
-  const res = await fetch("https://api.tavily.com/search", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      api_key: TAVILY_API_KEY,
-      query: opts.query,
-      max_results: opts.numResults || 5,
-      search_depth: "advanced",
-      include_answer: false,
-    }),
-  });
+  let res: Response;
+  try {
+    res = await fetchWithTimeout("https://api.tavily.com/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        api_key: TAVILY_API_KEY,
+        query: opts.query,
+        max_results: opts.numResults || 5,
+        search_depth: "advanced",
+        include_answer: false,
+      }),
+    });
+  } catch {
+    return [];
+  }
 
   if (!res.ok) return [];
 
