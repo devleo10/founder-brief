@@ -25,6 +25,7 @@ import {
 import { agentOrder, agentMetaMap } from "@/lib/agentMeta";
 import { extractVerdict } from "@/lib/extractVerdict";
 import { stripStructuredBlocks } from "@/lib/extractScores";
+import { loadHistory, prependHistory } from "@/lib/historyStorage";
 import type { AgentResult, SynthesisResult, HistoryEntry, IdeaInput } from "@/lib/types";
 import type { Competitor, Positioning, LaunchStrategy } from "@/lib/research/types";
 import AgentCard from "@/components/AgentCard";
@@ -291,10 +292,7 @@ function BriefPage() {
 
   // Load history
   useEffect(() => {
-    try {
-      const s = JSON.parse(localStorage.getItem("idea-validator-history") || "[]");
-      setHistory(s.slice(0, 20));
-    } catch {}
+    setHistory(loadHistory());
   }, []);
 
   // Pitch rotation
@@ -344,11 +342,7 @@ function BriefPage() {
       agents,
       synthesis: synth,
     };
-    setHistory(prev => {
-      const updated = [entry, ...prev].slice(0, 20);
-      try { localStorage.setItem("idea-validator-history", JSON.stringify(updated)); } catch {}
-      return updated;
-    });
+    setHistory((prev) => prependHistory(entry, prev));
   }, []);
 
   const handleEvent = useCallback((data: any) => {
