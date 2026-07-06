@@ -5,9 +5,11 @@ import { extractVerdict } from "@/lib/extractVerdict";
 export default function HistoryPanel({
   entries,
   onSelect,
+  onClear,
 }: {
   entries: HistoryEntry[];
   onSelect?: (entry: HistoryEntry) => void;
+  onClear?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   if (entries.length === 0) return null;
@@ -32,6 +34,11 @@ export default function HistoryPanel({
               </button>
             );
           })}
+          {onClear && (
+            <button type="button" className="history-clear" onClick={onClear}>
+              Clear history
+            </button>
+          )}
         </div>
       )}
     </div>

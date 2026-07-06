@@ -811,6 +811,25 @@
 
 .history-row-date { font-size: 11px; color: var(--text-3); flex-shrink: 0; }
 
+.history-clear {
+  margin-top: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-3);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+.history-clear:hover {
+  color: var(--text-2);
+  border-color: var(--line-3);
+}
+
 /* ========= ERROR ========= */
 .error-banner {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;

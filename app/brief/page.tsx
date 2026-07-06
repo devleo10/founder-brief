@@ -25,7 +25,7 @@ import {
 import { agentOrder, agentMetaMap } from "@/lib/agentMeta";
 import { extractVerdict } from "@/lib/extractVerdict";
 import { stripStructuredBlocks } from "@/lib/extractScores";
-import { loadHistory, prependHistory } from "@/lib/historyStorage";
+import { loadHistory, prependHistory, clearHistory } from "@/lib/historyStorage";
 import type { AgentResult, SynthesisResult, HistoryEntry, IdeaInput } from "@/lib/types";
 import type { Competitor, Positioning, LaunchStrategy } from "@/lib/research/types";
 import AgentCard from "@/components/AgentCard";
@@ -476,10 +476,24 @@ function BriefPage() {
     runUnified(getIdea(form));
   }, [form, runUnified, voice]);
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     abortRef.current?.abort();
     setCancelled(true);
     setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (!loading) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") handleCancel();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [loading, handleCancel]);
+
+  const handleClearHistory = () => {
+    clearHistory();
+    setHistory([]);
   };
 
   const handleNew = () => {
@@ -809,7 +823,7 @@ function BriefPage() {
           )}
 
           {error && <div className="error-banner">{error}</div>}
-          <HistoryPanel entries={history} onSelect={loadHistoryEntry} />
+          <HistoryPanel entries={history} onSelect={loadHistoryEntry} onClear={handleClearHistory} />
         </main>
       )}
 
@@ -1248,7 +1262,7 @@ function BriefPage() {
             </ReportErrorBoundary>
           )}
 
-          <HistoryPanel entries={history} onSelect={loadHistoryEntry} />
+          <HistoryPanel entries={history} onSelect={loadHistoryEntry} onClear={handleClearHistory} />
           <footer className="footer">Founder Brief — dossier + verdict. Not financial advice.</footer>
         </main>
       )}
